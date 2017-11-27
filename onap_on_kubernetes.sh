@@ -1,5 +1,10 @@
 #!/bin/bash
 
+export NIC=$(ip route get 8.8.8.8 | awk '{ print $5; exit }')
+export IP_ADDRESS=$(ifconfig $NIC | grep "inet addr" | tr -s ' ' | cut -d' ' -f3 | cut -d':' -f2)
+
+export RANCHER_URL=http://$IP_ADDRESS:8880
+export RANCHER_VERSION=v0.6.5
 
 function remove_docker {
     echo "[INFO] Removing any older version of Docker."
@@ -67,11 +72,6 @@ function install_rancher {
 
 function init_kubernetes {
     echo "[INFO] Starting Kubernetes deployment."
-    local NIC=$(ip route get 8.8.8.8 | awk '{ print $5; exit }')
-    local IP_ADDRESS=$(ifconfig $NIC | grep "inet addr" | tr -s ' ' | cut -d' ' -f3 | cut -d':' -f2)
-
-    export RANCHER_URL=http://$IP_ADDRESS:8880
-    export RANCHER_VERSION=v0.6.5
 
     wget https://github.com/rancher/cli/releases/download/$RANCHER_VERSION/rancher-linux-amd64-$RANCHER_VERSION.tar.gz
     tar -xvzf rancher-linux-amd64-$RANCHER_VERSION.tar.gz
@@ -81,8 +81,8 @@ function init_kubernetes {
     export RANCHER_ENVIRONMENT_ID=$(./rancher env create -t kubernetes onap_on_kubernetes)
     popd
 
-    $(install_host)
     echo "[INFO] Waiting for Kubernetes to complete deployment. Takes 5+ minutes."
+    $(install_host)
     sleep 5m
     install_kubectl
     kubectl cluster-info
@@ -152,6 +152,7 @@ function print {
 
 function install_kubectl {
     echo "[INFO] Installing kubectl CLI."
+    rm -rf ~/.kube
     curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl
     chmod +x ./kubectl
     sudo mv ./kubectl /usr/local/bin/kubectl
