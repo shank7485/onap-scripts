@@ -56,7 +56,7 @@ function setup_chameleon_proxy {
     if [ "$login" == "Login Succeeded" ]; then
         install_rancher
         echo "[INFO] Waiting for Rancher container to come up. Takes 5+ minutes."
-        sleep 5m
+        sleep 8m
         init_kubernetes
         install_helm
         install_onap
@@ -83,8 +83,8 @@ function init_kubernetes {
 
     echo "[INFO] Waiting for Kubernetes to complete deployment. Takes 5+ minutes."
     $(install_host)
-    sleep 5m
     install_kubectl
+    sleep 8m
     kubectl cluster-info
 }
 
@@ -108,7 +108,7 @@ function install_onap {
     ./createConfig.sh -n onap
     popd
     echo "[INFO] Waiting for Config Pod to come up. Takes 5+ minutes"
-    sleep 5m
+    sleep 8m
     pushd oom/kubernetes/oneclick
     ./createAll.bash -n onap
     echo "[INFO] Installing of ONAP started. Check with kubectl get pods --all-namespaces to see status."
