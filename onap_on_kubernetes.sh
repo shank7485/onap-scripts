@@ -1,5 +1,6 @@
 #!/bin/bash
 
+set -e
 export NIC=$(ip route get 8.8.8.8 | awk '{ print $5; exit }')
 export IP_ADDRESS=$(ifconfig $NIC | grep "inet addr" | tr -s ' ' | cut -d' ' -f3 | cut -d':' -f2)
 
@@ -72,6 +73,8 @@ function install_rancher {
 
 function init_kubernetes {
     echo "[INFO] Starting Kubernetes deployment."
+
+    curl -X GET $RANCHER_URL/v1/projects/$RANCHER_ENVIRONMENT_ID/registrationtokens
 
     wget https://github.com/rancher/cli/releases/download/$RANCHER_VERSION/rancher-linux-amd64-$RANCHER_VERSION.tar.gz
     tar -xvzf rancher-linux-amd64-$RANCHER_VERSION.tar.gz
@@ -171,25 +174,13 @@ function init_oom {
 
 function install_host {
     echo "[INFO] Starting Kubernetes Host Instantiation."
-    code=`python << END
-import requests, os
-
-RANCHER_URL = str(os.environ['RANCHER_URL'])
-RANCHER_ENVIRONMENT_ID = str(os.environ['RANCHER_ENVIRONMENT_ID'])
-
-data = requests.post(RANCHER_URL + '/v1/projects/' + RANCHER_ENVIRONMENT_ID + '/registrationtokens', {})
-post_data = data.json()
-
-data = requests.get(RANCHER_URL + '/v1/projects/' + RANCHER_ENVIRONMENT_ID + '/registrationtokens?state=active')
-json_dct = data.json()
-
-print(json_dct['data'][0]['command'])
-END`
-
-echo $code
+    curl -X -d "" POST $RANCHER_URL/v1/projects/$RANCHER_ENVIRONMENT_ID/registrationtokens
+    curl -X GET $RANCHER_URL/v1/projects/$RANCHER_ENVIRONMENT_ID/registrationtokens?state=active | jq -r '.data[0].command'
 }
 
 function generate_kubectl_config {
+#    curl -X -d '{"accountId":$RANCHER_ENVIRONMENT_ID, "name":"ONAP on Kubernetes", "description":"ONAP on Kubernetes", "publicValue":"string", "secretValue":"password"}' \
+#                $RANCHER_URL/v1/projects/$RANCHER_ENVIRONMENT_ID/apikeys | jq -r '.data.'
     code=`python << END
 import requests, os, base64
 
