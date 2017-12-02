@@ -1,5 +1,7 @@
 #!/bin/bash
 
+source /var/onap/functions
+
 set -e
 export NIC=$(ip route get 8.8.8.8 | awk '{ print $5; exit }')
 export IP_ADDRESS=$(ifconfig $NIC | grep "inet addr" | tr -s ' ' | cut -d' ' -f3 | cut -d':' -f2)
