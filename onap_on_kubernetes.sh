@@ -14,18 +14,18 @@ function remove_docker {
         echo "[INFO] Removing any older version of Docker."
         docker stop $(docker ps -a -q)
         docker rm $(docker ps -a -q)
-    
+
         sudo apt-get remove docker-engine -y
         sudo apt-get autoremove --purge docker-engine -y
-    
+
         sudo apt-get remove docker -y
         sudo apt-get purge docker -y
-    
+
         sudo apt-get remove docker-ce -y
         sudo apt-get purge docker-ce -y
-    
+
         sudo apt-get autoremove --purge
-    
+
         sudo umount /var/lib/docker/aufs
         sudo rm -rf /var/lib/docker
     fi
@@ -43,7 +43,7 @@ function setup_chameleon_proxy {
     chmod 755 chameleonsocks.sh
     socks=$(echo $socks_proxy | sed -e "s/^.*\///" | sed -e "s/:.*$//")
     port=$(echo $socks_proxy | sed -e "s/^.*://")
-    PROXY=$socks ./chameleonsocks.sh --install
+    sudo PROXY=$socks ./chameleonsocks.sh --install
 
     unset http_proxy
     unset HTTP_PROXY
@@ -78,7 +78,7 @@ function install_rancher {
 function init_kubernetes {
     echo "[INFO] Starting Kubernetes deployment."
 
-    curl -X GET $RANCHER_URL/v1/projects/$RANCHER_ENVIRONMENT_ID/registrationtokens
+    #curl -X GET $RANCHER_URL/v1/projects/$RANCHER_ENVIRONMENT_ID/registrationtokens
 
     wget https://github.com/rancher/cli/releases/download/$RANCHER_VERSION/rancher-linux-amd64-$RANCHER_VERSION.tar.gz
     tar -xvzf rancher-linux-amd64-$RANCHER_VERSION.tar.gz
@@ -178,7 +178,7 @@ function init_oom {
 
 function install_host {
     echo "[INFO] Starting Kubernetes Host Instantiation."
-    curl -X -d "" POST $RANCHER_URL/v1/projects/$RANCHER_ENVIRONMENT_ID/registrationtokens
+    curl -X POST $RANCHER_URL/v1/projects/$RANCHER_ENVIRONMENT_ID/registrationtokens
     curl -X GET $RANCHER_URL/v1/projects/$RANCHER_ENVIRONMENT_ID/registrationtokens?state=active | jq -r '.data[0].command'
 }
 
