@@ -1,13 +1,27 @@
 #!/bin/bash
 
-source /var/onap/functions
-
 set -e
 export NIC=$(ip route get 8.8.8.8 | awk '{ print $5; exit }')
 export IP_ADDRESS=$(ifconfig $NIC | grep "inet addr" | tr -s ' ' | cut -d' ' -f3 | cut -d':' -f2)
 
 export RANCHER_URL=http://$IP_ADDRESS:8880
 export RANCHER_VERSION=v0.6.5
+
+function is_package_installed {
+    if [[ -z "$@" ]]; then
+        return 1
+    fi
+    source /etc/os-release || source /usr/lib/os-release
+    case ${ID,,} in
+        *suse)
+        ;;
+        ubuntu|debian)
+            dpkg -s "$@" > /dev/null
+        ;;
+        rhel|centos|fedora)
+        ;;
+    esac
+}
 
 function remove_docker {
     if is_package_installed docker; then
@@ -69,6 +83,8 @@ function setup_chameleon_proxy {
         else
             echo "Cannot reach Nexus Docker repo. Check network/proxy."
         fi
+    else
+        echo "Set socks_proxy env variable in root."
     fi
 }
 
