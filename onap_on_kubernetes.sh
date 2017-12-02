@@ -7,10 +7,10 @@ export IP_ADDRESS=$(ifconfig $NIC | grep "inet addr" | tr -s ' ' | cut -d' ' -f3
 export RANCHER_URL=http://$IP_ADDRESS:8880
 export RANCHER_VERSION=v0.6.5
 
-sudo su
+sudo -i
 
 function is_package_installed {
-    sudo su
+    sudo -i
     if [[ -z "$@" ]]; then
         return 1
     fi
