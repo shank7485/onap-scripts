@@ -11,26 +11,24 @@ export RANCHER_VERSION=v0.6.5
 
 function remove_docker {
     if is_package_installed docker; then
-        return
+        echo "[INFO] Removing any older version of Docker."
+        docker stop $(docker ps -a -q)
+        docker rm $(docker ps -a -q)
+    
+        sudo apt-get remove docker-engine -y
+        sudo apt-get autoremove --purge docker-engine -y
+    
+        sudo apt-get remove docker -y
+        sudo apt-get purge docker -y
+    
+        sudo apt-get remove docker-ce -y
+        sudo apt-get purge docker-ce -y
+    
+        sudo apt-get autoremove --purge
+    
+        sudo umount /var/lib/docker/aufs
+        sudo rm -rf /var/lib/docker
     fi
-
-    echo "[INFO] Removing any older version of Docker."
-    docker stop $(docker ps -a -q)
-    docker rm $(docker ps -a -q)
-
-    sudo apt-get remove docker-engine -y
-    sudo apt-get autoremove --purge docker-engine -y
-
-    sudo apt-get remove docker -y
-    sudo apt-get purge docker -y
-
-    sudo apt-get remove docker-ce -y
-    sudo apt-get purge docker-ce -y
-
-    sudo apt-get autoremove --purge
-
-    sudo umount /var/lib/docker/aufs
-    sudo rm -rf /var/lib/docker
 }
 
 function setup_docker1.12 {
