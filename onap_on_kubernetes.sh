@@ -41,32 +41,34 @@ function setup_chameleon_proxy {
     echo "[INFO] Configuring Proxy."
     wget https://raw.githubusercontent.com/crops/chameleonsocks/master/chameleonsocks.sh
     chmod 755 chameleonsocks.sh
-    socks=$(echo $socks_proxy | sed -e "s/^.*\///" | sed -e "s/:.*$//")
-    port=$(echo $socks_proxy | sed -e "s/^.*://")
-    sudo PROXY=$socks ./chameleonsocks.sh --install
+    if [ "$socks_proxy" != "" ]; then
+        socks=$(echo $socks_proxy | sed -e "s/^.*\///" | sed -e "s/:.*$//")
+        port=$(echo $socks_proxy | sed -e "s/^.*://")
+        sudo PROXY=$socks ./chameleonsocks.sh --install
 
-    unset http_proxy
-    unset HTTP_PROXY
-    unset https_proxy
-    unset HTTPS_PROXY
-    unset no_proxy
-    unset NO_PROXY
-    unset socks_proxy
-    unset SOCKS_PROXY
-    unset ftp_proxy
-    unset FTP_PROXY
+        unset http_proxy
+        unset HTTP_PROXY
+        unset https_proxy
+        unset HTTPS_PROXY
+        unset no_proxy
+        unset NO_PROXY
+        unset socks_proxy
+        unset SOCKS_PROXY
+        unset ftp_proxy
+        unset FTP_PROXY
 
-    login=$(sudo docker login -u docker -p docker nexus3.onap.org:10001)
+        login=$(sudo docker login -u docker -p docker nexus3.onap.org:10001)
 
-    if [ "$login" == "Login Succeeded" ]; then
-        install_rancher
-        echo "[INFO] Waiting for Rancher container to come up. Takes 5+ minutes."
-        sleep 8m
-        init_kubernetes
-        install_helm
-        install_onap
-    else
-        echo "Cannot reach Nexus Docker repo. Check network/proxy."
+        if [ "$login" == "Login Succeeded" ]; then
+            install_rancher
+            echo "[INFO] Waiting for Rancher container to come up. Takes 5+ minutes."
+            sleep 8m
+            init_kubernetes
+            install_helm
+            install_onap
+        else
+            echo "Cannot reach Nexus Docker repo. Check network/proxy."
+        fi
     fi
 }
 
