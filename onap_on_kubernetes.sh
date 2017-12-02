@@ -8,6 +8,10 @@ export RANCHER_URL=http://$IP_ADDRESS:8880
 export RANCHER_VERSION=v0.6.5
 
 function remove_docker {
+    if is_package_installed docker; then
+        return
+    fi
+
     echo "[INFO] Removing any older version of Docker."
     docker stop $(docker ps -a -q)
     docker rm $(docker ps -a -q)
