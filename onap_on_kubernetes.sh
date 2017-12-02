@@ -199,8 +199,13 @@ function init_oom {
 
 function install_host {
     echo "[INFO] Starting Kubernetes Host Instantiation."
-    curl -X POST $RANCHER_URL/v1/projects/$RANCHER_ENVIRONMENT_ID/registrationtokens
-    curl -X GET $RANCHER_URL/v1/projects/$RANCHER_ENVIRONMENT_ID/registrationtokens?state=active | jq -r '.data[0].command'
+    while true; do
+        value=$(curl -X POST $RANCHER_URL/v1/projects/$RANCHER_ENVIRONMENT_ID/registrationtokens)
+        if [[ $value =~ "command" ]]; then
+            curl -X GET $RANCHER_URL/v1/projects/$RANCHER_ENVIRONMENT_ID/registrationtokens?state=active | jq -r '.data[0].command'
+            break
+        fi
+    done
 }
 
 function generate_kubectl_config {
