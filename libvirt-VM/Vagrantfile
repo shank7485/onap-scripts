@@ -1,0 +1,32 @@
+Vagrant.configure("2") do |config|
+  if Vagrant.has_plugin?("vagrant-proxyconf")
+    config.proxy.http     = ENV['http_proxy']
+    config.proxy.https    = ENV['https_proxy']
+    config.proxy.no_proxy = ENV['no_proxy']
+  end
+  config.vm.define :test_vm do |test_vm|
+    # Box name
+    #
+    test_vm.vm.box = "elastic/ubuntu-14.04-x86_64"
+
+    # Domain Specific Options
+    #
+    # See README for more info.
+    #
+    test_vm.vm.provider :libvirt do |domain|
+      domain.memory = 64 * 1024
+      domain.nested = true
+      domain.cpus = 6
+      domain.storage :file, :size => "60G"
+      domain.cpu_mode = 'host-passthrough'
+    end
+  end
+
+  config.vm.provider :libvirt do |libvirt|
+
+    libvirt.uri = 'qemu+unix:///system'
+    libvirt.driver = 'kvm'
+
+    libvirt.host = "localhost"
+  end
+end
