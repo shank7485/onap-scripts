@@ -40,7 +40,8 @@ function is_package_installed {
 
 function remove_docker {
     if [ -x "/usr/bin/docker" ]; then
-        if docker ps -a -q; then
+        docker_ps=$(docker ps -a -q)
+        if [[ "$docker_ps" ]]; then
           docker stop $(docker ps -a -q)
           docker rm $(docker ps -a -q)
         fi
