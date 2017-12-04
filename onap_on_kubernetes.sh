@@ -7,10 +7,7 @@ export IP_ADDRESS=$(ifconfig $NIC | grep "inet addr" | tr -s ' ' | cut -d' ' -f3
 export RANCHER_URL=http://$IP_ADDRESS:8880
 export RANCHER_VERSION=v0.6.5
 
-sudo -i
-
 function is_package_installed {
-    sudo -i
     if [[ -z "$@" ]]; then
         return 1
     fi
@@ -60,8 +57,7 @@ function setup_chameleon_proxy {
     chmod 755 chameleonsocks.sh
     if [ "$socks_proxy" != "" ]; then
         socks=$(echo $socks_proxy | sed -e "s/^.*\///" | sed -e "s/:.*$//")
-        port=$(echo $socks_proxy | sed -e "s/^.*://")
-        sudo PROXY=$socks ./chameleonsocks.sh --install
+        PROXY=$socks ./chameleonsocks.sh --install
 
         unset http_proxy
         unset HTTP_PROXY
@@ -78,8 +74,6 @@ function setup_chameleon_proxy {
 
         if [ "$login" == "Login Succeeded" ]; then
             install_rancher
-            echo "[INFO] Waiting for Rancher container to come up. Takes 5+ minutes."
-            sleep 8m
             init_kubernetes
             install_helm
             install_onap
@@ -94,12 +88,17 @@ function setup_chameleon_proxy {
 function install_rancher {
     echo "[INFO] Starting Rancher container."
     docker run -d --restart=unless-stopped -p 8880:8080 rancher/server
+    echo "[INFO] Waiting for Rancher container to come up."
+    sleep 5m
+    while true; do
+        if curl --fail $RANCHER_URL; then
+        break
+        fi
+    done
 }
 
 function init_kubernetes {
     echo "[INFO] Starting Kubernetes deployment."
-
-    #curl -X GET $RANCHER_URL/v1/projects/$RANCHER_ENVIRONMENT_ID/registrationtokens
 
     wget https://github.com/rancher/cli/releases/download/$RANCHER_VERSION/rancher-linux-amd64-$RANCHER_VERSION.tar.gz
     tar -xvzf rancher-linux-amd64-$RANCHER_VERSION.tar.gz
@@ -109,10 +108,10 @@ function init_kubernetes {
     export RANCHER_ENVIRONMENT_ID=$(./rancher env create -t kubernetes onap_on_kubernetes)
     popd
 
-    echo "[INFO] Waiting for Kubernetes to complete deployment. Takes 5+ minutes."
+    echo "[INFO] Waiting for Kubernetes to complete deployment. Takes 7+ minutes."
     $(install_host)
     install_kubectl
-    sleep 8m
+    sleep 7m
     kubectl cluster-info
 }
 
@@ -122,6 +121,7 @@ function install_helm {
     tar -zxvf helm-v2.3.0-linux-amd64.tar.gz
     sudo mv linux-amd64/helm /usr/local/bin/helm
     rm -rf helm-v2.3.0-linux-amd64.tar.gz
+    rm -rf linux-amd64
     helm help
 }
 
@@ -136,11 +136,35 @@ function install_onap {
     ./createConfig.sh -n onap
     popd
     echo "[INFO] Waiting for Config Pod to come up. Takes 5+ minutes"
-    sleep 8m
+    sleep 7m
     pushd oom/kubernetes/oneclick
-    ./createAll.bash -n onap
-    echo "[INFO] Installing of ONAP started. Check with kubectl get pods --all-namespaces to see status."
+    ./createAll.bash
+    echo "[INFO] Install ONAP all-in-one or individual components as required."
+}
+
+function install_kubectl {
+    echo "[INFO] Installing kubectl CLI."
+    rm -rf ~/.kube
+    curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl
+    chmod +x ./kubectl
+    sudo mv ./kubectl /usr/local/bin/kubectl
+    mkdir ~/.kube
+    pushd ~/.kube
+    $(generate_kubectl_config)
     popd
+}
+
+function init_oom {
+    echo "[INFO] ONAP on Kubernetes workflow: Rancher -> Kubernetes -> Kubectl -> ONAP"
+    remove_docker
+    setup_docker1.12
+    setup_chameleon_proxy
+}
+
+function install_host {
+    #echo "[INFO] Starting Kubernetes Host Instantiation."
+    value=$(curl -X POST $RANCHER_URL/v1/projects/$RANCHER_ENVIRONMENT_ID/registrationtokens)
+    curl -X GET $RANCHER_URL/v1/projects/$RANCHER_ENVIRONMENT_ID/registrationtokens?state=active | jq -r '.data[0].command'
 }
 
 function print {
@@ -176,36 +200,6 @@ function print {
 #
 #    # Edit values.yml with updated docker image in oom/kubernetes/<component> for persistence
     echo ""
-}
-
-function install_kubectl {
-    echo "[INFO] Installing kubectl CLI."
-    rm -rf ~/.kube
-    curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl
-    chmod +x ./kubectl
-    sudo mv ./kubectl /usr/local/bin/kubectl
-    mkdir ~/.kube
-    pushd ~/.kube
-    $(generate_kubectl_config)
-    popd
-}
-
-function init_oom {
-    echo "[INFO] ONAP on Kubernetes workflow: Rancher -> Kubernetes -> Kubectl -> ONAP"
-    remove_docker
-    setup_docker1.12
-    setup_chameleon_proxy
-}
-
-function install_host {
-    echo "[INFO] Starting Kubernetes Host Instantiation."
-    while true; do
-        value=$(curl -X POST $RANCHER_URL/v1/projects/$RANCHER_ENVIRONMENT_ID/registrationtokens)
-        if [[ $value =~ "command" ]]; then
-            curl -X GET $RANCHER_URL/v1/projects/$RANCHER_ENVIRONMENT_ID/registrationtokens?state=active | jq -r '.data[0].command'
-            break
-        fi
-    done
 }
 
 function generate_kubectl_config {
@@ -260,4 +254,4 @@ END`
 echo $code
 }
 
-init_oom
+#init_oom
