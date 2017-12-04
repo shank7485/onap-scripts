@@ -1,11 +1,26 @@
 #!/bin/bash
 
 set -e
+
 export NIC=$(ip route get 8.8.8.8 | awk '{ print $5; exit }')
 export IP_ADDRESS=$(ifconfig $NIC | grep "inet addr" | tr -s ' ' | cut -d' ' -f3 | cut -d':' -f2)
 
 export RANCHER_URL=http://$IP_ADDRESS:8880
 export RANCHER_VERSION=v0.6.5
+
+function spinner {
+    local pid=$1
+    local delay=0.75
+    local spinstr='|/-\'
+    while [ "$(ps a | awk '{print $1}' | grep $pid)" ]; do
+        local temp=${spinstr#?}
+        printf " [%c]  " "$spinstr"
+        local spinstr=$temp${spinstr%"$temp"}
+        sleep $delay
+        printf "\b\b\b\b\b\b"
+    done
+    printf "    \b\b\b\b"
+}
 
 function is_package_installed {
     if [[ -z "$@" ]]; then
@@ -90,6 +105,7 @@ function install_rancher {
     docker run -d --restart=unless-stopped -p 8880:8080 rancher/server
     echo "[INFO] Waiting for Rancher container to come up."
     sleep 5m
+    spinner $!
     while true; do
         if curl --fail $RANCHER_URL; then
         break
@@ -112,6 +128,7 @@ function init_kubernetes {
     $(install_host)
     install_kubectl
     sleep 7m
+    spinner $!
     kubectl cluster-info
 }
 
@@ -137,6 +154,7 @@ function install_onap {
     popd
     echo "[INFO] Waiting for Config Pod to come up. Takes 5+ minutes"
     sleep 7m
+    spinner $!
     pushd oom/kubernetes/oneclick
     ./createAll.bash
     echo "[INFO] Install ONAP all-in-one or individual components as required."
@@ -254,4 +272,14 @@ END`
 echo $code
 }
 
-#init_oom
+if [ "$EUID" -ne 0 ]; then
+  echo "Please run as root"
+  exit
+else
+  if [ "$socks_proxy" != "" ]; then
+    init_oom
+  else
+    echo "Set socks_proxy env variable in Root user."
+    exit
+  fi
+fi
