@@ -104,7 +104,7 @@ function install_rancher {
     echo "[INFO] Starting Rancher container."
     docker run -d --restart=unless-stopped -p 8880:8080 rancher/server
     echo "[INFO] Waiting for Rancher container to come up."
-    sleep 5m
+    sleep 5m &
     spinner $!
     while true; do
         if curl --fail $RANCHER_URL; then
@@ -127,7 +127,7 @@ function init_kubernetes {
     echo "[INFO] Waiting for Kubernetes to complete deployment. Takes 7+ minutes."
     $(install_host)
     install_kubectl
-    sleep 7m
+    sleep 7m &
     spinner $!
     kubectl cluster-info
 }
@@ -153,7 +153,7 @@ function install_onap {
     ./createConfig.sh -n onap
     popd
     echo "[INFO] Waiting for Config Pod to come up. Takes 5+ minutes"
-    sleep 7m
+    sleep 7m &
     spinner $!
     pushd oom/kubernetes/oneclick
     ./createAll.bash
