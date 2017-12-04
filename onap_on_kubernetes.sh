@@ -40,23 +40,27 @@ function is_package_installed {
 
 function remove_docker {
     if is_package_installed docker; then
-        echo "[INFO] Removing any older version of Docker."
-        docker stop $(docker ps -a -q)
-        docker rm $(docker ps -a -q)
+        var=$(docker -v | cut -d' ' -f3)
+        version=${var:0:-3}
+        if [ "$version" != "1.12" ]; then
+            echo "[INFO] Removing any other version of Docker other than 1.12."
+            docker stop $(docker ps -a -q)
+            docker rm $(docker ps -a -q)
 
-        sudo apt-get remove docker-engine -y
-        sudo apt-get autoremove --purge docker-engine -y
+            sudo apt-get remove docker-engine -y
+            sudo apt-get autoremove --purge docker-engine -y
 
-        sudo apt-get remove docker -y
-        sudo apt-get purge docker -y
+            sudo apt-get remove docker -y
+            sudo apt-get purge docker -y
 
-        sudo apt-get remove docker-ce -y
-        sudo apt-get purge docker-ce -y
+            sudo apt-get remove docker-ce -y
+            sudo apt-get purge docker-ce -y
 
-        sudo apt-get autoremove --purge
+            sudo apt-get autoremove --purge
 
-        sudo umount /var/lib/docker/aufs
-        sudo rm -rf /var/lib/docker
+            sudo umount /var/lib/docker/aufs
+            sudo rm -rf /var/lib/docker
+        fi
     fi
 }
 
