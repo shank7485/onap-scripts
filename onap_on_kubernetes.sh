@@ -40,8 +40,10 @@ function is_package_installed {
 
 function remove_docker {
     if [ -x "/usr/bin/docker" ]; then
-        docker stop $(docker ps -a -q) > /dev/null 2>&1
-        docker rm $(docker ps -a -q) > /dev/null 2>&1
+        if docker ps -a -q; then
+          docker stop $(docker ps -a -q)
+          docker rm $(docker ps -a -q)
+        fi
 
         var=$(docker -v | cut -d' ' -f3)
         version=${var:0:-3}
