@@ -117,7 +117,7 @@ function init_kubernetes {
     popd
 
     echo "[INFO] Waiting for Kubernetes to complete deployment. Takes 7+ minutes."
-    $(install_host)
+    install_host
     install_kubectl
     sleep 7m &
     spinner $!
