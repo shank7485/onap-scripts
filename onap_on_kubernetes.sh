@@ -103,7 +103,7 @@ function setup_chameleon_proxy {
 function install_rancher {
     echo "[INFO] Starting Rancher container."
     docker run -d --restart=unless-stopped -p 8880:8080 rancher/server
-    echo "[INFO] Waiting for Rancher container to come up."
+    echo "[INFO] Waiting for Rancher container to come up. Takes 5+ minutes."
     sleep 5m &
     spinner $!
     while true; do
@@ -152,7 +152,7 @@ function install_onap {
     cp onap-parameters-sample.yaml onap-parameters.yaml
     ./createConfig.sh -n onap
     popd
-    echo "[INFO] Waiting for Config Pod to come up. Takes 5+ minutes"
+    echo "[INFO] Waiting for Config Pod to come up. Takes 7+ minutes"
     sleep 7m &
     spinner $!
     pushd oom/kubernetes/oneclick
@@ -221,8 +221,6 @@ function print {
 }
 
 function generate_kubectl_config {
-#    curl -X -d '{"accountId":$RANCHER_ENVIRONMENT_ID, "name":"ONAP on Kubernetes", "description":"ONAP on Kubernetes", "publicValue":"string", "secretValue":"password"}' \
-#                $RANCHER_URL/v1/projects/$RANCHER_ENVIRONMENT_ID/apikeys | jq -r '.data.'
     code=`python << END
 import requests, os, base64
 
