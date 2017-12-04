@@ -40,12 +40,13 @@ function is_package_installed {
 
 function remove_docker {
     if is_package_installed docker; then
+        docker stop $(docker ps -a -q)
+        docker rm $(docker ps -a -q)
+
         var=$(docker -v | cut -d' ' -f3)
         version=${var:0:-3}
         if [ "$version" != "1.12" ]; then
             echo "[INFO] Removing any other version of Docker other than 1.12."
-            docker stop $(docker ps -a -q)
-            docker rm $(docker ps -a -q)
 
             sudo apt-get remove docker-engine -y
             sudo apt-get autoremove --purge docker-engine -y
