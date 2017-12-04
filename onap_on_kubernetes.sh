@@ -22,22 +22,6 @@ function spinner {
     printf "    \b\b\b\b"
 }
 
-function is_package_installed {
-    if [[ -z "$@" ]]; then
-        return 1
-    fi
-    source /etc/os-release || source /usr/lib/os-release
-    case ${ID,,} in
-        *suse)
-        ;;
-        ubuntu|debian)
-            dpkg -s "$@" > /dev/null
-        ;;
-        rhel|centos|fedora)
-        ;;
-    esac
-}
-
 function remove_docker {
     if [ -x "/usr/bin/docker" ]; then
         docker_ps=$(docker ps -a -q)
