@@ -178,7 +178,13 @@ function install_host {
         break
         fi
     done
-    $(curl -X GET $RANCHER_URL/v1/projects/$RANCHER_ENVIRONMENT_ID/registrationtokens?state=active | jq -r '.data[0].command')
+    while true; do
+        val=$(curl -X GET $RANCHER_URL/v1/projects/$RANCHER_ENVIRONMENT_ID/registrationtokens?state=active | jq -r '.data[0].command')
+        if [ "$val" != "" ]; then
+            $(val)
+            break
+        fi
+    done
 }
 
 function print {
