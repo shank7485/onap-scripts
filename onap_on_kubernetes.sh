@@ -94,12 +94,12 @@ function setup_chameleon_proxy {
 
 function install_rancher {
     echo "[INFO] Starting Rancher container."
-    docker run -d --restart=unless-stopped -p 8880:8080 rancher/server
+    docker run -d --restart=unless-stopped -p 8880:8080 rancher/server:v1.6.11 # Version
     echo "[INFO] Waiting for Rancher container to come up. Takes 5+ minutes."
     sleep 5m &
     spinner $!
     while true; do
-        if curl --fail $RANCHER_URL; then
+        if curl --fail -X GET $RANCHER_URL; then
         break
         fi
     done
@@ -116,10 +116,10 @@ function init_kubernetes {
     export RANCHER_ENVIRONMENT_ID=$(./rancher env create -t kubernetes onap_on_kubernetes)
     popd
 
-    echo "[INFO] Waiting for Kubernetes to complete deployment. Takes 7+ minutes."
+    echo "[INFO] Waiting for Kubernetes to complete deployment. Takes 5+ minutes."
     install_host
     install_kubectl
-    sleep 7m &
+    sleep 5m &
     spinner $!
     kubectl cluster-info
 }
@@ -144,12 +144,12 @@ function install_onap {
     cp onap-parameters-sample.yaml onap-parameters.yaml
     ./createConfig.sh -n onap
     popd
-    echo "[INFO] Waiting for Config Pod to come up. Takes 7+ minutes"
-    sleep 7m &
+    echo "[INFO] Waiting for Config Pod to come up. Takes 5+ minutes"
+    sleep 5m &
     spinner $!
     pushd oom/kubernetes/oneclick
     ./createAll.bash
-    echo "[INFO] Install ONAP all-in-one or individual components as required."
+    echo "[INFO] \"./createAll.bashInstall\" ONAP all-in-one or individual components as required."
 }
 
 function install_kubectl {
@@ -173,18 +173,8 @@ function init_oom {
 
 function install_host {
     echo "[INFO] Starting Kubernetes Host Instantiation."
-    while true; do
-        if curl --fail -X POST $RANCHER_URL/v1/projects/$RANCHER_ENVIRONMENT_ID/registrationtokens; then
-        break
-        fi
-    done
-    while true; do
-        val=$(curl -X GET $RANCHER_URL/v1/projects/$RANCHER_ENVIRONMENT_ID/registrationtokens?state=active | jq -r '.data[0].command')
-        if [ "$val" != "" ]; then
-            $($val)
-            break
-        fi
-    done
+    curl -X POST $RANCHER_URL/v1/projects/$RANCHER_ENVIRONMENT_ID/registrationtokens
+    $(curl -X GET $RANCHER_URL/v1/projects/$RANCHER_ENVIRONMENT_ID/registrationtokens?state=active | jq -r '.data[0].command')
 }
 
 function print {
