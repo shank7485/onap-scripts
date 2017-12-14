@@ -81,8 +81,6 @@ function setup_chameleon_proxy {
 
         if [ "$login" == "Login Succeeded" ]; then
             install_rancher
-            sleep 5m &
-            spinner $!
             init_kubernetes
             install_helm
             install_onap
@@ -109,10 +107,16 @@ function install_rancher {
 
 function init_kubernetes {
     echo "[INFO] Starting Kubernetes deployment."
+    export RANCHER_VERSION=v0.6.5
 
     wget https://github.com/rancher/cli/releases/download/$RANCHER_VERSION/rancher-linux-amd64-$RANCHER_VERSION.tar.gz
     tar -xvzf rancher-linux-amd64-$RANCHER_VERSION.tar.gz
     rm -rf rancher-linux-amd64-$RANCHER_VERSION.tar.gz
+
+    export NIC=$(ip route get 8.8.8.8 | awk '{ print $5; exit }')
+    export IP_ADDRESS=$(ifconfig $NIC | grep "inet addr" | tr -s ' ' | cut -d' ' -f3 | cut -d':' -f2)
+    export RANCHER_URL=http://$IP_ADDRESS:8880
+
 
     pushd rancher-$RANCHER_VERSION
     export RANCHER_ENVIRONMENT_ID=$(./rancher env create -t kubernetes onap_on_kubernetes)
