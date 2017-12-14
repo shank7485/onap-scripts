@@ -81,6 +81,8 @@ function setup_chameleon_proxy {
 
         if [ "$login" == "Login Succeeded" ]; then
             install_rancher
+            sleep 5m &
+            spinner $!
             init_kubernetes
             install_helm
             install_onap
