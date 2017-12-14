@@ -52,10 +52,44 @@ function remove_docker {
     fi
 }
 
-function setup_docker {
+function setup_docker1.12 {
     echo "[INFO] Installing Docker 1.12."
     curl https://releases.rancher.com/install-docker/1.12.sh | sh
     sudo usermod -aG docker $USER
+}
+
+function setup_chameleon_proxy {
+    echo "[INFO] Configuring Proxy."
+    wget https://raw.githubusercontent.com/crops/chameleonsocks/master/chameleonsocks.sh
+    chmod 755 chameleonsocks.sh
+    if [ "$socks_proxy" != "" ]; then
+        socks=$(echo $socks_proxy | sed -e "s/^.*\///" | sed -e "s/:.*$//")
+        PROXY=$socks ./chameleonsocks.sh --install
+
+        unset http_proxy
+        unset HTTP_PROXY
+        unset https_proxy
+        unset HTTPS_PROXY
+        unset no_proxy
+        unset NO_PROXY
+        unset socks_proxy
+        unset SOCKS_PROXY
+        unset ftp_proxy
+        unset FTP_PROXY
+
+        login=$(sudo docker login -u docker -p docker nexus3.onap.org:10001)
+
+        if [ "$login" == "Login Succeeded" ]; then
+            install_rancher
+            init_kubernetes
+            install_helm
+            install_onap
+        else
+            echo "Cannot reach Nexus Docker repo. Check network/proxy."
+        fi
+    else
+        echo "Set socks_proxy env variable in root."
+    fi
 }
 
 function install_rancher {
@@ -137,26 +171,17 @@ function install_kubectl {
     popd
 }
 
+function init_oom {
+    echo "[INFO] ONAP on Kubernetes workflow: Rancher -> Kubernetes -> Kubectl -> ONAP"
+    remove_docker
+    setup_docker1.12
+    setup_chameleon_proxy
+}
 
 function install_host {
     echo "[INFO] Starting Kubernetes Host Instantiation."
     curl -X POST $RANCHER_URL/v1/projects/$RANCHER_ENVIRONMENT_ID/registrationtokens
     $(curl -X GET $RANCHER_URL/v1/projects/$RANCHER_ENVIRONMENT_ID/registrationtokens?state=active | jq -r '.data[0].command')
-}
-
-function init_oom {
-    echo "[INFO] ONAP on Kubernetes workflow: Rancher -> Kubernetes -> Kubectl -> ONAP"
-    remove_docker
-    setup_docker
-    login=$(sudo docker login -u docker -p docker nexus3.onap.org:10001)
-    if [ "$login" == "Login Succeeded" ]; then
-        install_rancher
-        init_kubernetes
-        install_helm
-        install_onap
-    else
-        echo "Cannot reach Nexus Docker repo. Check network/proxy."
-    fi
 }
 
 function print {
