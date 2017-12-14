@@ -34,18 +34,9 @@ function remove_docker {
         version=${var:0:-3}
         if [ "$version" != "1.12" ]; then
             echo "[INFO] Removing any other version of Docker other than 1.12."
-
-            sudo apt-get remove docker-engine -y
-            sudo apt-get autoremove --purge docker-engine -y
-
-            sudo apt-get remove docker -y
-            sudo apt-get purge docker -y
-
-            sudo apt-get remove docker-ce -y
-            sudo apt-get purge docker-ce -y
-
-            sudo apt-get autoremove --purge
-
+            sudo apt-get remove docker docker-engine docker-ce docker.io -y
+            sudo apt-get purge docker docker-engine docker-ce docker.io -y
+            sudo apt-get autoremove
             sudo umount /var/lib/docker/aufs
             sudo rm -rf /var/lib/docker
         fi

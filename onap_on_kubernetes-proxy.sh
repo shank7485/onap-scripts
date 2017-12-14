@@ -184,41 +184,6 @@ function install_host {
     $(curl -X GET $RANCHER_URL/v1/projects/$RANCHER_ENVIRONMENT_ID/registrationtokens?state=active | jq -r '.data[0].command')
 }
 
-function print {
-#    Follow steps as show in https://wiki.onap.org/display/DW/ONAP+on+Kubernetesin (ONAP on Kubernetes) wiki to
-#    install Kubernetes and deploy ONAP components on it.
-#    After following the steps in the Wiki which includes running OOM, check if all pods are running
-#    kubectl get pods --all-namespaces
-#
-#    # Reflecting changes on to ONAP on Kubernetes cluster
-#
-#    # Workflow: Edit code -> Make Changes to Docker build (If required) -> Build Docker image -> Update Kubernetes Deployment to pick up updated Docker image which contains the changed source code
-#    # Make changes to component code base
-#    # Edit the Docker image building for that component to make sure the source code which goes into the Docker container is from local changes and
-#    # not nexus. This is necessary since some components clone source code directly from nexus and not from local. This needs to be changed so
-#    # that the source gets picked up from local.
-#    # Build the docker file.
-#    # Check if docker image is built
-#    docker images | grep <component name>
-#
-#    # Copy the docker image name
-#    # Edit the kubernetes deployment file for that component and update the image name to the one as seen in the above step
-#    kubectl edit deployment vfc-nslcm --namespace=<component name>
-#
-#    # Delete the specific pod of that component so that when kubernetes restarts it, it picks up the changed image
-#    kubectl get pods --all-namespaces -o=wide
-#    kubectl delete pod <Pod name> --namespace=<component name>
-#
-#    # Once the pod start running again, check the image used in the pod.
-#    kubectl describe pod <New Pod name> --namespace=<Component name>
-#
-#    # Check logs to see if its working properly
-#    kubectl logs <new Pod name> --namespace=<Component name> | less
-#
-#    # Edit values.yml with updated docker image in oom/kubernetes/<component> for persistence
-    echo ""
-}
-
 function generate_kubectl_config {
     code=`python << END
 import requests, os, base64
