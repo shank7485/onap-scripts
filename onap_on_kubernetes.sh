@@ -267,7 +267,7 @@ if [ "$EUID" -ne 0 ]; then
   exit
 else
   if [ "$socks_proxy" != "" ]; then
-    init_oom
+    #init_oom
   else
     echo "Set socks_proxy env variable in Root user."
     exit
