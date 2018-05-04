@@ -175,6 +175,7 @@ function install_kubectl {
     pushd ~/.kube
     $(generate_kubectl_config)
     popd
+    kubectl config set-cluster kubernetes --insecure-skip-tls-verify=true
 }
 
 function init_oom {
