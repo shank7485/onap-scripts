@@ -105,7 +105,7 @@ function install_rancher {
     export RANCHER_URL=http://$IP_ADDRESS:8880
 
     echo "[INFO] Starting Rancher container."
-    docker run -d --restart=unless-stopped -p 8080:8080 rancher/server:v1.6.11 # Version
+    docker run -d --restart=unless-stopped -p 8080:8080 rancher/server
     echo "[INFO] Waiting for Rancher container to come up. Takes 5+ minutes."
     sleep 5m &
     spinner $!
