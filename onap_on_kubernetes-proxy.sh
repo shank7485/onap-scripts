@@ -5,7 +5,7 @@ set -e
 export NIC=$(ip route get 8.8.8.8 | awk '{ print $5; exit }')
 export IP_ADDRESS=$(ifconfig $NIC | grep "inet addr" | tr -s ' ' | cut -d' ' -f3 | cut -d':' -f2)
 
-export RANCHER_URL=http://$IP_ADDRESS:8880
+export RANCHER_URL=http://$IP_ADDRESS:8080
 export RANCHER_VERSION=v0.6.5
 
 function spinner {
@@ -105,7 +105,7 @@ function install_rancher {
     export RANCHER_URL=http://$IP_ADDRESS:8880
 
     echo "[INFO] Starting Rancher container."
-    docker run -d --restart=unless-stopped -p 8880:8080 rancher/server:v1.6.11 # Version
+    docker run -d --restart=unless-stopped -p 8080:8080 rancher/server:v1.6.11 # Version
     echo "[INFO] Waiting for Rancher container to come up. Takes 5+ minutes."
     sleep 5m &
     spinner $!
