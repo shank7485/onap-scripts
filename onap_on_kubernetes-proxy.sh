@@ -60,6 +60,7 @@ function setup_docker1.12 {
 
 function setup_chameleon_proxy {
     echo "[INFO] Configuring Proxy."
+    export socks_proxy=http://proxy-us.intel.com:1080
     wget https://raw.githubusercontent.com/crops/chameleonsocks/master/chameleonsocks.sh
     chmod 755 chameleonsocks.sh
     if [ "$socks_proxy" != "" ]; then
