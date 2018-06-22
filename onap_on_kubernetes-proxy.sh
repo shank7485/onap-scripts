@@ -103,7 +103,7 @@ function install_rancher {
 
     export NIC=$(ip route get 8.8.8.8 | awk '{ print $5; exit }')
     export IP_ADDRESS=$(ifconfig $NIC | grep "inet addr" | tr -s ' ' | cut -d' ' -f3 | cut -d':' -f2)
-    export RANCHER_URL=http://$IP_ADDRESS:8880
+    export RANCHER_URL=http://$IP_ADDRESS:8080
 
     echo "[INFO] Starting Rancher container."
     docker run -d --restart=unless-stopped -p 8080:8080 rancher/server
